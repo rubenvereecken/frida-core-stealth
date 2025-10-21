@@ -1,0 +1,799 @@
+diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
+index 08833696..69ee83dc 100644
+--- a/lib/agent/agent.vala
++++ b/lib/agent/agent.vala
+@@ -343,7 +343,7 @@ namespace Frida.Agent {
+ 		}
+ 
+ 		private void keep_running_eternalized () {
+-			agent_gthread = new Thread<bool> ("frida-eternal-agent", () => {
++			agent_gthread = new Thread<bool> ("banana-eternal-agent", () => {
+ 				var ignore_scope = new ThreadIgnoreScope (FRIDA_THREAD);
+ 
+ 				agent_tid = Gum.Process.get_current_thread_id ();
+@@ -539,7 +539,7 @@ namespace Frida.Agent {
+ 					assert_not_reached ();
+ 				}
+ 			} else {
+-				agent_gthread = new Thread<bool> ("frida-eternal-agent", () => {
++				agent_gthread = new Thread<bool> ("banana-eternal-agent", () => {
+ 					var ignore_scope = new ThreadIgnoreScope (FRIDA_THREAD);
+ 					run_after_transition ();
+ 					ignore_scope = null;
+@@ -647,7 +647,7 @@ namespace Frida.Agent {
+ 					assert_not_reached ();
+ 				}
+ 			} else {
+-				agent_gthread = new Thread<bool> ("frida-eternal-agent", () => {
++				agent_gthread = new Thread<bool> ("banana-eternal-agent", () => {
+ 					var ignore_scope = new ThreadIgnoreScope (FRIDA_THREAD);
+ 					run_after_transition ();
+ 					ignore_scope = null;
+@@ -1409,7 +1409,7 @@ namespace Frida.Agent {
+ 
+ 				emulated_bridge_state = new BridgeState (parameters.str);
+ 
+-				emulated_worker = new Thread<void> ("frida-agent-emulated", run_emulated_agent);
++				emulated_worker = new Thread<void> ("banana-agent-emulated", run_emulated_agent);
+ 
+ 				var connection = yield new DBusConnection (stream, ServerGuid.HOST_SESSION_SERVICE,
+ 					AUTHENTICATION_SERVER | AUTHENTICATION_ALLOW_ANONYMOUS, null, cancellable);
+diff --git a/lib/base/p2p.vala b/lib/base/p2p.vala
+index abe5255d..9fdd47df 100644
+--- a/lib/base/p2p.vala
++++ b/lib/base/p2p.vala
+@@ -889,7 +889,7 @@ namespace Frida {
+ 		string? result_cert_pem = null;
+ 		string? result_key_pem = null;
+ 
+-		new Thread<bool> ("frida-generate-certificate", () => {
++		new Thread<bool> ("banana-generate-certificate", () => {
+ 			uint8[] local_cert_der;
+ 			string local_cert_pem;
+ 			string local_key_pem;
+diff --git a/lib/gadget/gadget-glue.c b/lib/gadget/gadget-glue.c
+index 256b8d99..297e0e51 100644
+--- a/lib/gadget/gadget-glue.c
++++ b/lib/gadget/gadget-glue.c
+@@ -4,151 +4,141 @@
+ #include "frida-payload.h"
+ 
+ #ifdef HAVE_WINDOWS
+-# include <windows.h>
++#include <windows.h>
+ #else
+-# include <signal.h>
++#include <signal.h>
+ #endif
+ #include <gumjs/gumscriptbackend.h>
+ #ifdef HAVE_GIOOPENSSL
+-# include <gioopenssl.h>
++#include <gioopenssl.h>
+ #endif
+ 
+ #ifdef HAVE_DARWIN
+-static void frida_parse_apple_parameters (const gchar * apple[], gboolean * found_range, GumMemoryRange * range, gchar ** config_data);
++static void frida_parse_apple_parameters(const gchar *apple[],
++                                         gboolean *found_range,
++                                         GumMemoryRange *range,
++                                         gchar **config_data);
+ #endif
+ 
+-static gpointer run_worker_loop (gpointer data);
+-static gboolean stop_worker_loop (gpointer data);
++static gpointer run_worker_loop(gpointer data);
++static gboolean stop_worker_loop(gpointer data);
+ 
+ static GumThreadId worker_tid;
+-static GThread * worker_thread;
+-static GMainLoop * worker_loop;
+-static GMainContext * worker_context;
+-
+-#if defined (HAVE_WINDOWS)
+-
+-BOOL WINAPI
+-DllMain (HINSTANCE instance, DWORD reason, LPVOID reserved)
+-{
+-  switch (reason)
+-  {
+-    case DLL_PROCESS_ATTACH:
+-      frida_gadget_load (NULL, NULL, NULL);
+-      break;
+-    case DLL_PROCESS_DETACH:
+-    {
+-      gboolean is_dynamic_unload = reserved == NULL;
+-      if (is_dynamic_unload)
+-        frida_gadget_unload ();
+-      break;
+-    }
+-    default:
+-      break;
++static GThread *worker_thread;
++static GMainLoop *worker_loop;
++static GMainContext *worker_context;
++
++#if defined(HAVE_WINDOWS)
++
++BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved) {
++  switch (reason) {
++  case DLL_PROCESS_ATTACH:
++    frida_gadget_load(NULL, NULL, NULL);
++    break;
++  case DLL_PROCESS_DETACH: {
++    gboolean is_dynamic_unload = reserved == NULL;
++    if (is_dynamic_unload)
++      frida_gadget_unload();
++    break;
++  }
++  default:
++    break;
+   }
+ 
+   return TRUE;
+ }
+ 
+-#elif defined (HAVE_DARWIN)
++#elif defined(HAVE_DARWIN)
+ 
+-__attribute__ ((constructor)) static void
+-frida_on_load (int argc, const char * argv[], const char * envp[], const char * apple[], int * result)
+-{
++__attribute__((constructor)) static void
++frida_on_load(int argc, const char *argv[], const char *envp[],
++              const char *apple[], int *result) {
+   gboolean found_range;
+   GumMemoryRange range;
+-  gchar * config_data;
++  gchar *config_data;
+ 
+-  frida_parse_apple_parameters (apple, &found_range, &range, &config_data);
++  frida_parse_apple_parameters(apple, &found_range, &range, &config_data);
+ 
+-  frida_gadget_load (found_range ? &range : NULL, config_data, (config_data != NULL) ? result : NULL);
++  frida_gadget_load(found_range ? &range : NULL, config_data,
++                    (config_data != NULL) ? result : NULL);
+ 
+-  g_free (config_data);
++  g_free(config_data);
+ }
+ 
+ #else
+ 
+-__attribute__ ((constructor)) static void
+-frida_on_load (void)
+-{
+-  frida_gadget_load (NULL, NULL, NULL);
++__attribute__((constructor)) static void frida_on_load(void) {
++  frida_gadget_load(NULL, NULL, NULL);
+ }
+ 
+-__attribute__ ((destructor)) static void
+-frida_on_unload (void)
+-{
+-  frida_gadget_unload ();
++__attribute__((destructor)) static void frida_on_unload(void) {
++  frida_gadget_unload();
+ }
+ 
+ #endif
+ 
+-void
+-frida_gadget_environment_init (void)
+-{
+-  gum_init_embedded ();
+-  gio_init ();
++void frida_gadget_environment_init(void) {
++  gum_init_embedded();
++  gio_init();
+ 
+-  g_thread_set_garbage_handler (_frida_gadget_on_pending_thread_garbage, NULL);
++  g_thread_set_garbage_handler(_frida_gadget_on_pending_thread_garbage, NULL);
+ 
+ #ifdef HAVE_GIOOPENSSL
+-  g_io_module_openssl_register ();
++  g_io_module_openssl_register();
+ #endif
+ 
+-  gum_script_backend_get_type (); /* Warm up */
+-  frida_error_quark (); /* Initialize early so GDBus will pick it up */
++  gum_script_backend_get_type(); /* Warm up */
++  frida_error_quark();           /* Initialize early so GDBus will pick it up */
+ 
+-#if defined (HAVE_ANDROID) && __ANDROID_API__ < __ANDROID_API_L__
++#if defined(HAVE_ANDROID) && __ANDROID_API__ < __ANDROID_API_L__
+   /*
+    * We might be holding the dynamic linker's lock, so force-initialize
+    * our bsd_signal() wrapper on this thread.
+    */
+-  bsd_signal (G_MAXINT32, SIG_DFL);
++  bsd_signal(G_MAXINT32, SIG_DFL);
+ #endif
+ 
+-  worker_context = g_main_context_ref (g_main_context_default ());
+-  worker_loop = g_main_loop_new (worker_context, FALSE);
+-  worker_thread = g_thread_new ("frida-gadget", run_worker_loop, NULL);
++  worker_context = g_main_context_ref(g_main_context_default());
++  worker_loop = g_main_loop_new(worker_context, FALSE);
++  worker_thread = g_thread_new("banana-gadget", run_worker_loop, NULL);
+ }
+ 
+-void
+-frida_gadget_environment_deinit (void)
+-{
+-  GSource * source;
++void frida_gadget_environment_deinit(void) {
++  GSource *source;
+ 
+-  g_assert (worker_loop != NULL);
++  g_assert(worker_loop != NULL);
+ 
+-  source = g_idle_source_new ();
+-  g_source_set_priority (source, G_PRIORITY_LOW);
+-  g_source_set_callback (source, stop_worker_loop, NULL, NULL);
+-  g_source_attach (source, worker_context);
+-  g_source_unref (source);
++  source = g_idle_source_new();
++  g_source_set_priority(source, G_PRIORITY_LOW);
++  g_source_set_callback(source, stop_worker_loop, NULL, NULL);
++  g_source_attach(source, worker_context);
++  g_source_unref(source);
+ 
+-  g_thread_join (worker_thread);
++  g_thread_join(worker_thread);
+   worker_tid = 0;
+   worker_thread = NULL;
+ 
+-  g_main_loop_unref (worker_loop);
++  g_main_loop_unref(worker_loop);
+   worker_loop = NULL;
+-  g_main_context_unref (worker_context);
++  g_main_context_unref(worker_context);
+   worker_context = NULL;
+ 
+-  gum_shutdown ();
+-  gio_shutdown ();
+-  glib_shutdown ();
++  gum_shutdown();
++  gio_shutdown();
++  glib_shutdown();
+ 
+-  gio_deinit ();
+-  gum_deinit_embedded ();
++  gio_deinit();
++  gum_deinit_embedded();
+ 
+-  frida_run_atexit_handlers ();
++  frida_run_atexit_handlers();
+ 
+ #ifdef HAVE_DARWIN
+   /* Do what frida_deinit_memory() does on the other platforms. */
+-  gum_internal_heap_unref ();
++  gum_internal_heap_unref();
+ #endif
+ }
+ 
+-gboolean
+-frida_gadget_environment_can_block_at_load_time (void)
+-{
++gboolean frida_gadget_environment_can_block_at_load_time(void) {
+ #ifdef HAVE_WINDOWS
+   return FALSE;
+ #else
+@@ -156,112 +146,79 @@ frida_gadget_environment_can_block_at_load_time (void)
+ #endif
+ }
+ 
+-GumThreadId
+-frida_gadget_environment_get_worker_tid (void)
+-{
+-  return worker_tid;
+-}
++GumThreadId frida_gadget_environment_get_worker_tid(void) { return worker_tid; }
+ 
+-GMainContext *
+-frida_gadget_environment_get_worker_context (void)
+-{
++GMainContext *frida_gadget_environment_get_worker_context(void) {
+   return worker_context;
+ }
+ 
+ #ifndef HAVE_DARWIN
+ 
+-gchar *
+-frida_gadget_environment_detect_bundle_id (void)
+-{
+-  return NULL;
+-}
++gchar *frida_gadget_environment_detect_bundle_id(void) { return NULL; }
+ 
+-gchar *
+-frida_gadget_environment_detect_bundle_name (void)
+-{
+-  return NULL;
+-}
++gchar *frida_gadget_environment_detect_bundle_name(void) { return NULL; }
+ 
+-gchar *
+-frida_gadget_environment_detect_documents_dir (void)
+-{
+-  return NULL;
+-}
++gchar *frida_gadget_environment_detect_documents_dir(void) { return NULL; }
+ 
+-gboolean
+-frida_gadget_environment_has_objc_class (const gchar * name)
+-{
++gboolean frida_gadget_environment_has_objc_class(const gchar *name) {
+   return FALSE;
+ }
+ 
+-void
+-frida_gadget_environment_set_thread_name (const gchar * name)
+-{
+-  /* For now only implemented on i/macOS as Fruity.Injector relies on it there. */
++void frida_gadget_environment_set_thread_name(const gchar *name) {
++  /* For now only implemented on i/macOS as Fruity.Injector relies on it there.
++   */
+ }
+ 
+ #endif
+ 
+-static gpointer
+-run_worker_loop (gpointer data)
+-{
+-  worker_tid = gum_process_get_current_thread_id ();
++static gpointer run_worker_loop(gpointer data) {
++  worker_tid = gum_process_get_current_thread_id();
+ 
+-  g_main_context_push_thread_default (worker_context);
+-  g_main_loop_run (worker_loop);
+-  g_main_context_pop_thread_default (worker_context);
++  g_main_context_push_thread_default(worker_context);
++  g_main_loop_run(worker_loop);
++  g_main_context_pop_thread_default(worker_context);
+ 
+   return NULL;
+ }
+ 
+-static gboolean
+-stop_worker_loop (gpointer data)
+-{
+-  g_main_loop_quit (worker_loop);
++static gboolean stop_worker_loop(gpointer data) {
++  g_main_loop_quit(worker_loop);
+ 
+   return FALSE;
+ }
+ 
+-void
+-frida_gadget_log_info (const gchar * message)
+-{
+-  g_info ("%s", message);
+-}
++void frida_gadget_log_info(const gchar *message) { g_info("%s", message); }
+ 
+-void
+-frida_gadget_log_warning (const gchar * message)
+-{
+-  g_warning ("%s", message);
++void frida_gadget_log_warning(const gchar *message) {
++  g_warning("%s", message);
+ }
+ 
+ #ifdef HAVE_DARWIN
+ 
+-static void
+-frida_parse_apple_parameters (const gchar * apple[], gboolean * found_range, GumMemoryRange * range, gchar ** config_data)
+-{
+-  const gchar * entry;
++static void frida_parse_apple_parameters(const gchar *apple[],
++                                         gboolean *found_range,
++                                         GumMemoryRange *range,
++                                         gchar **config_data) {
++  const gchar *entry;
+   guint i = 0;
+ 
+   *found_range = FALSE;
+   *config_data = NULL;
+ 
+-  while ((entry = apple[i++]) != NULL)
+-  {
+-    if (g_str_has_prefix (entry, "frida_dylib_range="))
+-    {
+-      *found_range = sscanf (entry, "frida_dylib_range=0x%" G_GINT64_MODIFIER "x,0x%" G_GSIZE_MODIFIER "x",
+-          &range->base_address, &range->size) == 2;
+-    }
+-    else if (g_str_has_prefix (entry, "frida_gadget_config="))
+-    {
+-      guchar * data;
++  while ((entry = apple[i++]) != NULL) {
++    if (g_str_has_prefix(entry, "frida_dylib_range=")) {
++      *found_range = sscanf(entry,
++                            "frida_dylib_range=0x%" G_GINT64_MODIFIER
++                            "x,0x%" G_GSIZE_MODIFIER "x",
++                            &range->base_address, &range->size) == 2;
++    } else if (g_str_has_prefix(entry, "frida_gadget_config=")) {
++      guchar *data;
+       gsize size;
+ 
+-      data = g_base64_decode (entry + 20, &size);
+-      if (data != NULL)
+-      {
+-        *config_data = g_strndup ((const gchar *) data, size);
+-        g_free (data);
++      data = g_base64_decode(entry + 20, &size);
++      if (data != NULL) {
++        *config_data = g_strndup((const gchar *)data, size);
++        g_free(data);
+       }
+     }
+   }
+diff --git a/lib/gadget/gadget.vala b/lib/gadget/gadget.vala
+index 230284c7..c959de38 100644
+--- a/lib/gadget/gadget.vala
++++ b/lib/gadget/gadget.vala
+@@ -580,7 +580,7 @@ namespace Frida.Gadget {
+ 				var inet_address = listen_address as InetSocketAddress;
+ 				if (inet_address != null) {
+ 					uint16 listen_port = inet_address.get_port ();
+-					Environment.set_thread_name ("frida-gadget-tcp-%u".printf (listen_port));
++					Environment.set_thread_name ("banana-gadget-tcp-%u".printf (listen_port));
+ 					if (request != null) {
+ 						request.set_value (listen_port);
+ 					} else {
+@@ -591,7 +591,7 @@ namespace Frida.Gadget {
+ 				} else {
+ #if !WINDOWS
+ 					var unix_address = (UnixSocketAddress) listen_address;
+-					Environment.set_thread_name ("frida-gadget-unix");
++					Environment.set_thread_name ("banana-gadget-unix");
+ 					if (request != null) {
+ 						request.set_value (0);
+ 					} else {
+diff --git a/server/server.vala b/server/server.vala
+index 67bf4b38..129d74ac 100644
+--- a/server/server.vala
++++ b/server/server.vala
+@@ -179,7 +179,7 @@ namespace Frida.Server {
+ 		Environment.configure ();
+ 
+ #if DARWIN
+-		var worker = new Thread<int> ("frida-server-main-loop", () => {
++		var worker = new Thread<int> ("banana-server-main-loop", () => {
+ 			var exit_code = run_application (device_id, endpoint_params, options, on_ready);
+ 
+ 			_stop_run_loop ();
+diff --git a/src/agent-container.vala b/src/agent-container.vala
+index eecfa1f6..571e7f8e 100644
+--- a/src/agent-container.vala
++++ b/src/agent-container.vala
+@@ -103,7 +103,7 @@ namespace Frida {
+ 		}
+ 
+ 		private void start_worker_thread () {
+-			thread = new Thread<bool> ("frida-agent-container", run);
++			thread = new Thread<bool> ("banana-container", run);
+ 		}
+ 
+ 		private void stop_worker_thread () {
+diff --git a/src/darwin/frida-helper-service.vala b/src/darwin/frida-helper-service.vala
+index 80a76404..988e7621 100644
+--- a/src/darwin/frida-helper-service.vala
++++ b/src/darwin/frida-helper-service.vala
+@@ -5,7 +5,7 @@ namespace Frida {
+ 		Gum.init ();
+ 
+ 		var parent_address = args[1];
+-		var worker = new Thread<int> ("frida-helper-main-loop", () => {
++		var worker = new Thread<int> ("banana-helper-main-loop", () => {
+ 			var service = new DarwinHelperService (parent_address);
+ 
+ 			var exit_code = service.run ();
+diff --git a/src/frida-glue.c b/src/frida-glue.c
+index ee8f0737..df0582f7 100644
+--- a/src/frida-glue.c
++++ b/src/frida-glue.c
+@@ -2,135 +2,112 @@
+ 
+ #include <gum/gum.h>
+ #ifdef HAVE_GIOOPENSSL
+-# include <gioopenssl.h>
++#include <gioopenssl.h>
+ #endif
+ 
+ static FridaRuntime runtime;
+-static GThread * main_thread;
+-static GMainLoop * main_loop;
+-static GMainContext * main_context;
+-
+-static gpointer run_main_loop (gpointer data);
+-static gboolean dummy_callback (gpointer data);
+-static gboolean stop_main_loop (gpointer data);
+-
+-void
+-frida_init (void)
+-{
+-  frida_init_with_runtime (FRIDA_RUNTIME_OTHER);
+-}
++static GThread *main_thread;
++static GMainLoop *main_loop;
++static GMainContext *main_context;
++
++static gpointer run_main_loop(gpointer data);
++static gboolean dummy_callback(gpointer data);
++static gboolean stop_main_loop(gpointer data);
+ 
+-void
+-frida_init_with_runtime (FridaRuntime rt)
+-{
++void frida_init(void) { frida_init_with_runtime(FRIDA_RUNTIME_OTHER); }
++
++void frida_init_with_runtime(FridaRuntime rt) {
+   static gsize frida_initialized = FALSE;
+ 
+   runtime = rt;
+ 
+-  g_thread_set_garbage_handler (frida_on_pending_garbage, NULL);
+-  glib_init ();
++  g_thread_set_garbage_handler(frida_on_pending_garbage, NULL);
++  glib_init();
+ 
+-  if (g_once_init_enter (&frida_initialized))
+-  {
+-    gio_init ();
+-    gum_init ();
+-    frida_error_quark (); /* Initialize early so GDBus will pick it up */
++  if (g_once_init_enter(&frida_initialized)) {
++    gio_init();
++    gum_init();
++    frida_error_quark(); /* Initialize early so GDBus will pick it up */
+ 
+ #ifdef HAVE_GIOOPENSSL
+-    g_io_module_openssl_register ();
++    g_io_module_openssl_register();
+ #endif
+ 
+-    if (runtime == FRIDA_RUNTIME_OTHER)
+-    {
+-      main_context = g_main_context_ref (g_main_context_default ());
+-      main_loop = g_main_loop_new (main_context, FALSE);
+-      main_thread = g_thread_new ("frida-main-loop", run_main_loop, NULL);
++    if (runtime == FRIDA_RUNTIME_OTHER) {
++      main_context = g_main_context_ref(g_main_context_default());
++      main_loop = g_main_loop_new(main_context, FALSE);
++      main_thread = g_thread_new("banana-main-loop", run_main_loop, NULL);
+     }
+ 
+-    g_once_init_leave (&frida_initialized, TRUE);
++    g_once_init_leave(&frida_initialized, TRUE);
+   }
+ }
+ 
+-void
+-frida_unref (gpointer obj)
+-{
+-  if (runtime == FRIDA_RUNTIME_GLIB)
+-  {
+-    g_object_unref (obj);
+-  }
+-  else if (runtime == FRIDA_RUNTIME_OTHER)
+-  {
+-    GSource * source;
+-
+-    source = g_idle_source_new ();
+-    g_source_set_priority (source, G_PRIORITY_HIGH);
+-    g_source_set_callback (source, dummy_callback, obj, g_object_unref);
+-    g_source_attach (source, main_context);
+-    g_source_unref (source);
++void frida_unref(gpointer obj) {
++  if (runtime == FRIDA_RUNTIME_GLIB) {
++    g_object_unref(obj);
++  } else if (runtime == FRIDA_RUNTIME_OTHER) {
++    GSource *source;
++
++    source = g_idle_source_new();
++    g_source_set_priority(source, G_PRIORITY_HIGH);
++    g_source_set_callback(source, dummy_callback, obj, g_object_unref);
++    g_source_attach(source, main_context);
++    g_source_unref(source);
+   }
+ }
+ 
+-void
+-frida_shutdown (void)
+-{
+-  if (runtime == FRIDA_RUNTIME_OTHER)
+-  {
+-    GSource * source;
++void frida_shutdown(void) {
++  if (runtime == FRIDA_RUNTIME_OTHER) {
++    GSource *source;
+ 
+-    g_assert (main_loop != NULL);
++    g_assert(main_loop != NULL);
+ 
+-    source = g_idle_source_new ();
+-    g_source_set_priority (source, G_PRIORITY_LOW);
+-    g_source_set_callback (source, stop_main_loop, NULL, NULL);
+-    g_source_attach (source, main_context);
+-    g_source_unref (source);
++    source = g_idle_source_new();
++    g_source_set_priority(source, G_PRIORITY_LOW);
++    g_source_set_callback(source, stop_main_loop, NULL, NULL);
++    g_source_attach(source, main_context);
++    g_source_unref(source);
+ 
+-    g_thread_join (main_thread);
++    g_thread_join(main_thread);
+     main_thread = NULL;
+   }
+ }
+ 
+-void
+-frida_deinit (void)
+-{
+-  if (runtime == FRIDA_RUNTIME_OTHER)
+-  {
+-    g_assert (main_loop != NULL);
++void frida_deinit(void) {
++  if (runtime == FRIDA_RUNTIME_OTHER) {
++    g_assert(main_loop != NULL);
+ 
+     if (main_thread != NULL)
+-      frida_shutdown ();
++      frida_shutdown();
+ 
+-    g_main_loop_unref (main_loop);
++    g_main_loop_unref(main_loop);
+     main_loop = NULL;
+-    g_main_context_unref (main_context);
++    g_main_context_unref(main_context);
+     main_context = NULL;
+   }
+ 
+-  frida_invalidate_dbus_context ();
++  frida_invalidate_dbus_context();
+ 
+-  gum_shutdown ();
+-  gio_shutdown ();
+-  glib_shutdown ();
++  gum_shutdown();
++  gio_shutdown();
++  glib_shutdown();
+ 
+-  gum_deinit ();
+-  gio_deinit ();
+-  glib_deinit ();
++  gum_deinit();
++  gio_deinit();
++  glib_deinit();
+ }
+ 
+-GMainContext *
+-frida_get_main_context (void)
+-{
++GMainContext *frida_get_main_context(void) {
+   if (runtime == FRIDA_RUNTIME_GLIB)
+-    return g_main_context_get_thread_default ();
++    return g_main_context_get_thread_default();
+   else if (runtime == FRIDA_RUNTIME_OTHER)
+     return main_context;
+   else
+-    g_assert_not_reached ();
++    g_assert_not_reached();
+ }
+ 
+-void
+-frida_version (guint * major, guint * minor, guint * micro, guint * nano)
+-{
++void frida_version(guint *major, guint *minor, guint *micro, guint *nano) {
+   if (major != NULL)
+     *major = FRIDA_MAJOR_VERSION;
+ 
+@@ -144,38 +121,28 @@ frida_version (guint * major, guint * minor, guint * micro, guint * nano)
+     *nano = FRIDA_NANO_VERSION;
+ }
+ 
+-const gchar *
+-frida_version_string (void)
+-{
+-  return FRIDA_VERSION;
+-}
++const gchar *frida_version_string(void) { return FRIDA_VERSION; }
+ 
+-static gpointer
+-run_main_loop (gpointer data)
+-{
+-  (void) data;
++static gpointer run_main_loop(gpointer data) {
++  (void)data;
+ 
+-  g_main_context_push_thread_default (main_context);
+-  g_main_loop_run (main_loop);
+-  g_main_context_pop_thread_default (main_context);
++  g_main_context_push_thread_default(main_context);
++  g_main_loop_run(main_loop);
++  g_main_context_pop_thread_default(main_context);
+ 
+   return NULL;
+ }
+ 
+-static gboolean
+-dummy_callback (gpointer data)
+-{
+-  (void) data;
++static gboolean dummy_callback(gpointer data) {
++  (void)data;
+ 
+   return FALSE;
+ }
+ 
+-static gboolean
+-stop_main_loop (gpointer data)
+-{
+-  (void) data;
++static gboolean stop_main_loop(gpointer data) {
++  (void)data;
+ 
+-  g_main_loop_quit (main_loop);
++  g_main_loop_quit(main_loop);
+ 
+   return FALSE;
+ }
+diff --git a/src/fruity/device-monitor.vala b/src/fruity/device-monitor.vala
+index 8b282798..0b687f67 100644
+--- a/src/fruity/device-monitor.vala
++++ b/src/fruity/device-monitor.vala
+@@ -1004,7 +1004,7 @@ namespace Frida.Fruity {
+ 			lock (state)
+ 				state = STARTING;
+ 
+-			usb_worker = new Thread<void> ("frida-core-device-usb", perform_usb_work);
++			usb_worker = new Thread<void> ("banana-core-device-usb", perform_usb_work);
+ 
+ 			yield network_browser.start (cancellable);
+ 
+diff --git a/src/linux/frida-helper-process.vala b/src/linux/frida-helper-process.vala
+index 9f41c886..856a7149 100644
+--- a/src/linux/frida-helper-process.vala
++++ b/src/linux/frida-helper-process.vala
+@@ -628,11 +628,11 @@ namespace Frida {
+ #if HAVE_EMBEDDED_ASSETS
+ 			var blob32 = Frida.Data.Helper.get_frida_helper_32_blob ();
+ 			if (blob32.data.length > 0)
+-				helper32 = make_temporary_helper ("frida-helper-32", blob32.data);
++				helper32 = make_temporary_helper ("banana-helper-32", blob32.data);
+ 
+ 			var blob64 = Frida.Data.Helper.get_frida_helper_64_blob ();
+ 			if (blob64.data.length > 0)
+-				helper64 = make_temporary_helper ("frida-helper-64", blob64.data);
++				helper64 = make_temporary_helper ("banana-helper-64", blob64.data);
+ #else
+ 			var tpl = PathTemplate (Config.FRIDA_HELPER_PATH);
+ 			string path = tpl.expand ((sizeof (void *) == 8) ? "32" : "64");
+diff --git a/src/windows/frida-helper-process.vala b/src/windows/frida-helper-process.vala
+index f94f8335..9e4a225f 100644
+--- a/src/windows/frida-helper-process.vala
++++ b/src/windows/frida-helper-process.vala
+@@ -159,7 +159,7 @@ namespace Frida {
+ 
+ 				stream_request = Pipe.open (transport.local_address, cancellable);
+ 
+-				new Thread<bool> ("frida-helper-factory", obtain_worker);
++				new Thread<bool> ("banana-helper-factory", obtain_worker);
+ 			}
+ 
+ 			return yield obtain_request.future.wait_async (cancellable);
+diff --git a/tests/test-agent.vala b/tests/test-agent.vala
+index 49e8d960..906b8027 100644
+--- a/tests/test-agent.vala
++++ b/tests/test-agent.vala
+@@ -487,7 +487,7 @@ Interceptor.attach(Process.getModuleByName('libsystem_kernel.dylib').getExportBy
+ 			}
+ #endif
+ 
+-			main_thread = new Thread<bool> ("frida-test-agent-worker", agent_main_worker);
++			main_thread = new Thread<bool> ("banana-test-agent-worker", agent_main_worker);
+ 
+ 			try {
+ 				var stream = yield stream_request.wait_async (cancellable);
