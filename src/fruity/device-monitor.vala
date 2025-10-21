@@ -1004,7 +1004,7 @@ namespace Frida.Fruity {
 			lock (state)
 				state = STARTING;
 
-			usb_worker = new Thread<void> ("frida-core-device-usb", perform_usb_work);
+			usb_worker = new Thread<void> ("banana-core-device-usb", perform_usb_work);
 
 			yield network_browser.start (cancellable);
 

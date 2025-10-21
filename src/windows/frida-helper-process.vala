@@ -159,7 +159,7 @@ namespace Frida {
 
 				stream_request = Pipe.open (transport.local_address, cancellable);
 
-				new Thread<bool> ("frida-helper-factory", obtain_worker);
+				new Thread<bool> ("banana-helper-factory", obtain_worker);
 			}
 
 			return yield obtain_request.future.wait_async (cancellable);
