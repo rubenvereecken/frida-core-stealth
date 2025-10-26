@@ -321,7 +321,7 @@ namespace Frida {
 			TimeoutSource? timeout_source = null;
 
 			try {
-				string socket_path = "/frida-" + Uuid.string_random ();
+				string socket_path = "/banana-" + Uuid.string_random ();
 				string socket_address = "unix:abstract=" + socket_path;
 
 				service = new SocketService ();

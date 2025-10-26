@@ -1207,9 +1207,9 @@ namespace Frida {
 			return (void *) (remote_module.base_address + offset);
 		}
 
-		private static string make_fallback_address () {
-			return "/frida-" + Uuid.string_random ();
-		}
+	private static string make_fallback_address () {
+		return "/banana-" + Uuid.string_random ();
+	}
 
 		private Future<RemoteAgent> establish_connection (LoaderLaunch launch, InjectSpec spec, BootstrapResult bres,
 				UnixConnection? agent_ctrl, string fallback_address, Cancellable? cancellable) throws Error, IOError {
