@@ -2125,7 +2125,7 @@ namespace Frida {
 #endif
 
 	namespace ServerGuid {
-		public const string HOST_SESSION_SERVICE = "6769746875622e636f6d2f6672696461";
+		public const string HOST_SESSION_SERVICE = "851fa8de1f0a068701f5699c3e074ae6";
 	}
 
 	namespace ObjectPath {

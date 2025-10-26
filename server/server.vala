@@ -1,7 +1,7 @@
 namespace Frida.Server {
 	private static Application application;
 
-	private const string DEFAULT_DIRECTORY = "re.frida.server";
+	private static string default_directory = null;
 	private static bool output_version = false;
 	private static string? device_id = null;
 	private static string? listen_address = null;
@@ -198,7 +198,9 @@ namespace Frida.Server {
 
 	private static int run_application (string? device_id, EndpointParameters endpoint_params, ControlServiceOptions options,
 			ReadyHandler on_ready) {
-		TemporaryDirectory.always_use ((directory != null) ? directory : DEFAULT_DIRECTORY);
+		if (default_directory == null)
+			default_directory = Uuid.string_random ();
+		TemporaryDirectory.always_use ((directory != null) ? directory : default_directory);
 		TemporaryDirectory.use_sysroot (options.sysroot);
 
 		application = new Application (device_id, endpoint_params, options);
