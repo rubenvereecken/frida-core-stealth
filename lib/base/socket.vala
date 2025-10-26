@@ -163,7 +163,7 @@ namespace Frida {
 		var msg = new Soup.Message.from_uri ("GET", uri);
 		Soup.websocket_client_prepare_handshake (msg, origin, null, null);
 		msg.request_headers.replace ("Host", make_host_header_value (uri));
-		msg.request_headers.replace ("User-Agent", "Frida/" + _version_string ());
+		msg.request_headers.replace ("User-Agent", "Banana/" + _version_string ());
 		msg.request_headers.foreach ((name, val) => {
 			request.append (name + ": " + val + "\r\n");
 		});
@@ -577,7 +577,7 @@ namespace Frida {
 
 			private void on_asset_request (Soup.Server server, Soup.ServerMessage msg, string path,
 					HashTable<string, string>? query) {
-				msg.get_response_headers ().replace ("Server", "Frida/" + _version_string ());
+				msg.get_response_headers ().replace ("Server", "Banana/" + _version_string ());
 
 				unowned string method = msg.get_method ();
 				if (method != "GET" && method != "HEAD") {

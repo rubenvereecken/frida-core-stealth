@@ -305,7 +305,7 @@ namespace Frida {
 			var offer = PeerSessionDescription.parse (offer_sdp);
 
 			var agent = new Nice.Agent.full (dbus_context, Nice.Compatibility.RFC5245, ICE_TRICKLE);
-			agent.set_software ("Frida");
+			agent.set_software ("Banana");
 			agent.controlling_mode = false;
 			agent.ice_tcp = false;
 

@@ -1724,7 +1724,7 @@ namespace Frida.Gadget {
 				}
 
 				uint pid = get_process_id ();
-				string identifier = "re.frida.Gadget";
+				string identifier = "re.banana.Gadget";
 				string name = "Gadget";
 				var no_parameters = make_parameters_dict ();
 				this_app = HostApplicationInfo (identifier, name, pid, no_parameters);
