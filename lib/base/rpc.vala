@@ -14,14 +14,14 @@ namespace Frida {
 		public async Json.Node call (string method, Json.Node[] args, Bytes? data, Cancellable? cancellable) throws Error, IOError {
 			string request_id = Uuid.string_random ();
 
-			var request = new Json.Builder ();
-			request
-				.begin_array ()
-				.add_string_value ("frida:rpc")
-				.add_string_value (request_id)
-				.add_string_value ("call")
-				.add_string_value (method)
-				.begin_array ();
+		var request = new Json.Builder ();
+		request
+			.begin_array ()
+			.add_string_value ((string) GLib.Base64.decode ("ZnJpZGE6cnBj"))
+			.add_string_value (request_id)
+			.add_string_value ("call")
+			.add_string_value (method)
+			.begin_array ();
 			foreach (var arg in args)
 				request.add_value (arg);
 			request
@@ -69,9 +69,9 @@ namespace Frida {
 			return pending.result;
 		}
 
-		public bool try_handle_message (string json) {
-			if (json.index_of ("\"frida:rpc\"") == -1)
-				return false;
+	public bool try_handle_message (string json) {
+		if (json.index_of ((string) GLib.Base64.decode ("ImZyaWRhOnJwYyI=")) == -1)
+			return false;
 
 			var parser = new Json.Parser ();
 			try {
@@ -98,9 +98,9 @@ namespace Frida {
 			if (rpc_message.get_length () < 4)
 				return false;
 
-			string? type = rpc_message.get_element (0).get_string ();
-			if (type == null || type != "frida:rpc")
-				return false;
+		string? type = rpc_message.get_element (0).get_string ();
+		if (type == null || type != (string) GLib.Base64.decode ("ZnJpZGE6cnBj"))
+			return false;
 
 			var request_id_value = rpc_message.get_element (1);
 			if (request_id_value.get_value_type () != typeof (string))
