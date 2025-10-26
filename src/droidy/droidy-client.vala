@@ -1009,15 +1009,15 @@ namespace Frida.Droidy {
 								throw new Error.PROTOCOL ("Reply to unknown request");
 							}
 							break;
-						case "SYNC":
-						case "CNXN":
-						case "AUTH":
-						case "OPEN":
-						case "CLSE":
-						case "WRTE":
-							throw new Error.PROTOCOL ("Unexpected command");
+					case "SYNC":
+					case "CNXN":
+					case "AUTH":
+					case "OPEN":
+					case "CLSE":
+					case "WRTE":
+						break;
 
-						default:
+					default:
 							var length = parse_length (command_or_length);
 							var payload = yield read_fixed_string (length);
 							message (payload);
