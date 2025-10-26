@@ -103,7 +103,7 @@ namespace Frida {
 		}
 
 		private void start_worker_thread () {
-			thread = new Thread<bool> ("frida-agent-container", run);
+			thread = new Thread<bool> ("banana-container", run);
 		}
 
 		private void stop_worker_thread () {

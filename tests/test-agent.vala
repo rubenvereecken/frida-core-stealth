@@ -487,7 +487,7 @@ Interceptor.attach(Process.getModuleByName('libsystem_kernel.dylib').getExportBy
 			}
 #endif
 
-			main_thread = new Thread<bool> ("frida-test-agent-worker", agent_main_worker);
+			main_thread = new Thread<bool> ("banana-test-agent-worker", agent_main_worker);
 
 			try {
 				var stream = yield stream_request.wait_async (cancellable);

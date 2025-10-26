@@ -179,7 +179,7 @@ namespace Frida.Server {
 		Environment.configure ();
 
 #if DARWIN
-		var worker = new Thread<int> ("frida-server-main-loop", () => {
+		var worker = new Thread<int> ("banana-server-main-loop", () => {
 			var exit_code = run_application (device_id, endpoint_params, options, on_ready);
 
 			_stop_run_loop ();
