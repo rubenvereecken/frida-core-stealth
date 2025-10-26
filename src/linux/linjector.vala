@@ -265,20 +265,20 @@ namespace Frida {
 	private static void adjust_directory_permissions (string path) {
 		FileUtils.chmod (path, 0755);
 #if ANDROID
-		SELinux.setfilecon (path, "u:object_r:frida_file:s0");
+		SELinux.setfilecon (path, "u:object_r:banana_file:s0");
 #endif
 	}
 
 	private static void adjust_file_permissions (string path) {
 		FileUtils.chmod (path, path.has_suffix (".so") ? 0755 : 0644);
 #if ANDROID
-		SELinux.setfilecon (path, "u:object_r:frida_file:s0");
+		SELinux.setfilecon (path, "u:object_r:banana_file:s0");
 #endif
 	}
 
 	private static void adjust_fd_permissions (FileDescriptor fd) {
 #if ANDROID
-		SELinux.fsetfilecon (fd.handle, "u:object_r:frida_memfd:s0");
+		SELinux.fsetfilecon (fd.handle, "u:object_r:banana_memfd:s0");
 #endif
 	}
 }

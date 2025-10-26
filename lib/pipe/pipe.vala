@@ -165,9 +165,9 @@ namespace Frida {
 					socket.bind (server_address, true);
 					socket.listen ();
 
-					Posix.chmod (path, Posix.S_IRUSR | Posix.S_IWUSR | Posix.S_IRGRP | Posix.S_IWGRP | Posix.S_IROTH | Posix.S_IWOTH);
+				Posix.chmod (path, Posix.S_IRUSR | Posix.S_IWUSR | Posix.S_IRGRP | Posix.S_IWGRP | Posix.S_IROTH | Posix.S_IWOTH);
 #if ANDROID
-					SELinux.setfilecon (path, "u:object_r:frida_file:s0");
+				SELinux.setfilecon (path, "u:object_r:banana_file:s0");
 #endif
 
 					establish_server.begin (socket, server_address, promise, cancellable);

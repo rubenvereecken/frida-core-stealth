@@ -39,9 +39,9 @@ static gboolean frida_set_file_contents (const gchar * filename, const gchar * c
 static const FridaSELinuxRule frida_selinux_rules[] =
 {
   { { "domain", NULL }, "domain", "process", { "execmem", NULL } },
-  { { "domain", NULL }, "frida_file", "dir", { "search", NULL } },
-  { { "domain", NULL }, "frida_file", "file", { "open", "read", "getattr", "execute", "?map", NULL } },
-  { { "domain", NULL }, "frida_memfd", "file", { "open", "read", "write", "getattr", "execute", "?map", NULL } },
+  { { "domain", NULL }, "banana_file", "dir", { "search", NULL } },
+  { { "domain", NULL }, "banana_file", "file", { "open", "read", "getattr", "execute", "?map", NULL } },
+  { { "domain", NULL }, "banana_memfd", "file", { "open", "read", "write", "getattr", "execute", "?map", NULL } },
   { { "domain", NULL }, "shell_data_file", "dir", { "search", NULL } },
   { { "domain", NULL }, "zygote_exec", "file", { "execute", NULL } },
   { { "domain", NULL }, "$self", "process", { "sigchld", NULL } },
@@ -82,14 +82,14 @@ frida_selinux_patch_policy (void)
   res = policydb_load_isids (&db, &sidtab);
   g_assert (res == 0);
 
-  if (frida_ensure_type (&db, "frida_file", 2, "file_type", "mlstrustedobject", &error) == NULL)
+  if (frida_ensure_type (&db, "banana_file", 2, "file_type", "mlstrustedobject", &error) == NULL)
   {
     g_printerr ("Unable to add SELinux type: %s\n", error->message);
     g_clear_error (&error);
     goto beach;
   }
 
-  if (frida_ensure_type (&db, "frida_memfd", 2, "file_type", "mlstrustedobject", &error) == NULL)
+  if (frida_ensure_type (&db, "banana_memfd", 2, "file_type", "mlstrustedobject", &error) == NULL)
   {
     g_printerr ("Unable to add SELinux type: %s\n", error->message);
     g_clear_error (&error);
