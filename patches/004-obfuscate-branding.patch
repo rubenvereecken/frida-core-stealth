@@ -1,0 +1,98 @@
+From a8825848fbdb32890700f9a00757aff40f30a0ed Mon Sep 17 00:00:00 2001
+From: Ruben Vereecken <ruben@20tech.io>
+Date: Sun, 26 Oct 2025 17:13:26 +0000
+Subject: [PATCH] Obfuscate branding strings
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Replace Frida branding with Banana to avoid detection:
+- ICE agent software: Frida → Banana
+- HTTP headers: User-Agent and Server
+- Gadget identifier: re.frida.Gadget → re.banana.Gadget
+- G_LOG_DOMAIN: Frida → Banana
+---
+ lib/base/session.vala  | 2 +-
+ lib/base/socket.vala   | 4 ++--
+ lib/gadget/gadget.vala | 2 +-
+ meson.build            | 2 +-
+ src/frida.vala         | 2 +-
+ 5 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/lib/base/session.vala b/lib/base/session.vala
+index f39543a2..74f9f2c8 100644
+--- a/lib/base/session.vala
++++ b/lib/base/session.vala
+@@ -305,7 +305,7 @@ namespace Frida {
+ 			var offer = PeerSessionDescription.parse (offer_sdp);
+ 
+ 			var agent = new Nice.Agent.full (dbus_context, Nice.Compatibility.RFC5245, ICE_TRICKLE);
+-			agent.set_software ("Frida");
++			agent.set_software ("Banana");
+ 			agent.controlling_mode = false;
+ 			agent.ice_tcp = false;
+ 
+diff --git a/lib/base/socket.vala b/lib/base/socket.vala
+index f37f9f84..42f753cb 100644
+--- a/lib/base/socket.vala
++++ b/lib/base/socket.vala
+@@ -163,7 +163,7 @@ namespace Frida {
+ 		var msg = new Soup.Message.from_uri ("GET", uri);
+ 		Soup.websocket_client_prepare_handshake (msg, origin, null, null);
+ 		msg.request_headers.replace ("Host", make_host_header_value (uri));
+-		msg.request_headers.replace ("User-Agent", "Frida/" + _version_string ());
++		msg.request_headers.replace ("User-Agent", "Banana/" + _version_string ());
+ 		msg.request_headers.foreach ((name, val) => {
+ 			request.append (name + ": " + val + "\r\n");
+ 		});
+@@ -577,7 +577,7 @@ namespace Frida {
+ 
+ 			private void on_asset_request (Soup.Server server, Soup.ServerMessage msg, string path,
+ 					HashTable<string, string>? query) {
+-				msg.get_response_headers ().replace ("Server", "Frida/" + _version_string ());
++				msg.get_response_headers ().replace ("Server", "Banana/" + _version_string ());
+ 
+ 				unowned string method = msg.get_method ();
+ 				if (method != "GET" && method != "HEAD") {
+diff --git a/lib/gadget/gadget.vala b/lib/gadget/gadget.vala
+index c959de38..7ce8e2bb 100644
+--- a/lib/gadget/gadget.vala
++++ b/lib/gadget/gadget.vala
+@@ -1724,7 +1724,7 @@ namespace Frida.Gadget {
+ 				}
+ 
+ 				uint pid = get_process_id ();
+-				string identifier = "re.frida.Gadget";
++				string identifier = "re.banana.Gadget";
+ 				string name = "Gadget";
+ 				var no_parameters = make_parameters_dict ();
+ 				this_app = HostApplicationInfo (identifier, name, pid, no_parameters);
+diff --git a/meson.build b/meson.build
+index 7182308d..bf7a41aa 100644
+--- a/meson.build
++++ b/meson.build
+@@ -738,7 +738,7 @@ configure_file(
+ 
+ add_project_arguments(
+   (cc.get_argument_syntax() == 'msvc') ? '/FI' : '-include', meson.current_build_dir() / 'config.h',
+-  '-DG_LOG_DOMAIN="Frida"',
++  '-DG_LOG_DOMAIN="Banana"',
+   '-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_56',
+   '-DG_DISABLE_DEPRECATED',
+   language: c_languages)
+diff --git a/src/frida.vala b/src/frida.vala
+index 57a509b3..4f94a315 100644
+--- a/src/frida.vala
++++ b/src/frida.vala
+@@ -2489,7 +2489,7 @@ namespace Frida {
+ 			dbus_context = yield get_dbus_context ();
+ 
+ 			var agent = new Nice.Agent.full (dbus_context, Nice.Compatibility.RFC5245, ICE_TRICKLE);
+-			agent.set_software ("Frida");
++			agent.set_software ("Banana");
+ 			agent.controlling_mode = true;
+ 			agent.ice_tcp = false;
+ 
+-- 
+2.51.1
+
