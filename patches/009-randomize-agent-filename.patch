@@ -1,0 +1,91 @@
+diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
+index 95a178f3..bf4c81d2 100644
+--- a/src/linux/linux-host-session.vala
++++ b/src/linux/linux-host-session.vala
+@@ -31,6 +31,7 @@ namespace Frida {
+ 		private AgentContainer system_session_container;
+ 
+ 		private AgentDescriptor? agent;
++		private string agent_name_prefix;
+ 
+ #if ANDROID
+ 		private RoboLauncher robo_launcher;
+@@ -51,26 +52,27 @@ namespace Frida {
+ 			);
+ 		}
+ 
+-		construct {
+-			helper.output.connect (on_output);
++	construct {
++		helper.output.connect (on_output);
+ 
+-			injector = new Linjector (helper, false, tempdir);
+-			injector.uninjected.connect (on_uninjected);
++		injector = new Linjector (helper, false, tempdir);
++		injector.uninjected.connect (on_uninjected);
+ 
+ #if HAVE_EMBEDDED_ASSETS
+-			var blob32 = Frida.Data.Agent.get_frida_agent_32_so_blob ();
+-			var blob64 = Frida.Data.Agent.get_frida_agent_64_so_blob ();
+-			var emulated_arm = Frida.Data.Agent.get_frida_agent_arm_so_blob ();
+-			var emulated_arm64 = Frida.Data.Agent.get_frida_agent_arm64_so_blob ();
+-			agent = new AgentDescriptor (PathTemplate ("frida-agent-<arch>.so"),
+-				new Bytes.static (blob32.data),
+-				new Bytes.static (blob64.data),
+-				new AgentResource[] {
+-					new AgentResource ("frida-agent-arm.so", new Bytes.static (emulated_arm.data), tempdir),
+-					new AgentResource ("frida-agent-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
+-				},
+-				AgentMode.INSTANCED,
+-				tempdir);
++		var blob32 = Frida.Data.Agent.get_frida_agent_32_so_blob ();
++		var blob64 = Frida.Data.Agent.get_frida_agent_64_so_blob ();
++		var emulated_arm = Frida.Data.Agent.get_frida_agent_arm_so_blob ();
++		var emulated_arm64 = Frida.Data.Agent.get_frida_agent_arm64_so_blob ();
++		agent_name_prefix = GLib.Uuid.string_random ();
++		agent = new AgentDescriptor (PathTemplate (agent_name_prefix + "-<arch>.so"),
++			new Bytes.static (blob32.data),
++			new Bytes.static (blob64.data),
++			new AgentResource[] {
++				new AgentResource (agent_name_prefix + "-arm.so", new Bytes.static (emulated_arm.data), tempdir),
++				new AgentResource (agent_name_prefix + "-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
++			},
++			AgentMode.INSTANCED,
++			tempdir);
+ #endif
+ 
+ #if ANDROID
+@@ -381,20 +383,20 @@ namespace Frida {
+ 			return stream_request.future;
+ 		}
+ 
+-		protected override string? get_emulated_agent_path (uint pid) throws Error {
+-			unowned string name;
+-			switch (cpu_type_from_pid (pid)) {
+-				case Gum.CpuType.IA32:
+-					name = "frida-agent-arm.so";
+-					break;
+-				case Gum.CpuType.AMD64:
+-					name = "frida-agent-arm64.so";
+-					break;
+-				default:
+-					throw new Error.NOT_SUPPORTED ("Emulated realm is not supported on this architecture");
+-			}
++	protected override string? get_emulated_agent_path (uint pid) throws Error {
++		string name;
++		switch (cpu_type_from_pid (pid)) {
++			case Gum.CpuType.IA32:
++				name = agent_name_prefix + "-arm.so";
++				break;
++			case Gum.CpuType.AMD64:
++				name = agent_name_prefix + "-arm64.so";
++				break;
++			default:
++				throw new Error.NOT_SUPPORTED ("Emulated realm is not supported on this architecture");
++		}
+ 
+-			AgentResource? resource = agent.resources.first_match (r => r.name == name);
++		AgentResource? resource = agent.resources.first_match (r => r.name == name);
+ 			if (resource == null)
+ 				throw new Error.NOT_SUPPORTED ("Unable to handle emulated processes due to build configuration");
+ 
