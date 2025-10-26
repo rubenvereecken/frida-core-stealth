@@ -1,0 +1,37 @@
+diff --git a/lib/base/session.vala b/lib/base/session.vala
+index 74f9f2c8..2c949487 100644
+--- a/lib/base/session.vala
++++ b/lib/base/session.vala
+@@ -2125,7 +2125,7 @@ namespace Frida {
+ #endif
+ 
+ 	namespace ServerGuid {
+-		public const string HOST_SESSION_SERVICE = "6769746875622e636f6d2f6672696461";
++		public const string HOST_SESSION_SERVICE = "851fa8de1f0a068701f5699c3e074ae6";
+ 	}
+ 
+ 	namespace ObjectPath {
+diff --git a/server/server.vala b/server/server.vala
+index 129d74ac..08d92c1c 100644
+--- a/server/server.vala
++++ b/server/server.vala
+@@ -1,7 +1,7 @@
+ namespace Frida.Server {
+ 	private static Application application;
+ 
+-	private const string DEFAULT_DIRECTORY = "re.frida.server";
++	private static string default_directory = null;
+ 	private static bool output_version = false;
+ 	private static string? device_id = null;
+ 	private static string? listen_address = null;
+@@ -198,7 +198,9 @@ namespace Frida.Server {
+ 
+ 	private static int run_application (string? device_id, EndpointParameters endpoint_params, ControlServiceOptions options,
+ 			ReadyHandler on_ready) {
+-		TemporaryDirectory.always_use ((directory != null) ? directory : DEFAULT_DIRECTORY);
++		if (default_directory == null)
++			default_directory = Uuid.string_random ();
++		TemporaryDirectory.always_use ((directory != null) ? directory : default_directory);
+ 		TemporaryDirectory.use_sysroot (options.sysroot);
+ 
+ 		application = new Application (device_id, endpoint_params, options);
