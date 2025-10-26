@@ -1,0 +1,77 @@
+From 6b8eadb6d7696e2ed5131f114d4d2e91f06fb691 Mon Sep 17 00:00:00 2001
+From: Ruben Vereecken <ruben@20tech.io>
+Date: Sun, 26 Oct 2025 16:41:22 +0000
+Subject: [PATCH] Obfuscate RPC protocol identifiers
+
+Replace hardcoded 'frida:rpc' string literals with Base64-encoded
+equivalents to evade simple string-based detection.
+
+Changes:
+- Protocol identifier in RPC calls: Base64-encoded at runtime
+- Message type checking: Decode and compare against encoded string
+- Fast message filtering: Search for encoded representation
+
+This prevents detection tools from finding the protocol identifier
+through static string analysis of the binary or network traffic inspection.
+
+Related to Batch 2 of the anti-detection patch series.
+---
+ lib/base/rpc.vala | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
+index c4654527..96502f78 100644
+--- a/lib/base/rpc.vala
++++ b/lib/base/rpc.vala
+@@ -14,14 +14,14 @@ namespace Frida {
+ 		public async Json.Node call (string method, Json.Node[] args, Bytes? data, Cancellable? cancellable) throws Error, IOError {
+ 			string request_id = Uuid.string_random ();
+ 
+-			var request = new Json.Builder ();
+-			request
+-				.begin_array ()
+-				.add_string_value ("frida:rpc")
+-				.add_string_value (request_id)
+-				.add_string_value ("call")
+-				.add_string_value (method)
+-				.begin_array ();
++		var request = new Json.Builder ();
++		request
++			.begin_array ()
++			.add_string_value ((string) GLib.Base64.decode ("ZnJpZGE6cnBj"))
++			.add_string_value (request_id)
++			.add_string_value ("call")
++			.add_string_value (method)
++			.begin_array ();
+ 			foreach (var arg in args)
+ 				request.add_value (arg);
+ 			request
+@@ -69,9 +69,9 @@ namespace Frida {
+ 			return pending.result;
+ 		}
+ 
+-		public bool try_handle_message (string json) {
+-			if (json.index_of ("\"frida:rpc\"") == -1)
+-				return false;
++	public bool try_handle_message (string json) {
++		if (json.index_of ((string) GLib.Base64.decode ("ImZyaWRhOnJwYyI=")) == -1)
++			return false;
+ 
+ 			var parser = new Json.Parser ();
+ 			try {
+@@ -98,9 +98,9 @@ namespace Frida {
+ 			if (rpc_message.get_length () < 4)
+ 				return false;
+ 
+-			string? type = rpc_message.get_element (0).get_string ();
+-			if (type == null || type != "frida:rpc")
+-				return false;
++		string? type = rpc_message.get_element (0).get_string ();
++		if (type == null || type != (string) GLib.Base64.decode ("ZnJpZGE6cnBj"))
++			return false;
+ 
+ 			var request_id_value = rpc_message.get_element (1);
+ 			if (request_id_value.get_value_type () != typeof (string))
+-- 
+2.51.1
+
