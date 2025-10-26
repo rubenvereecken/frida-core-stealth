@@ -1,0 +1,186 @@
+diff --git a/lib/agent/agent-glue.c b/lib/agent/agent-glue.c
+index a8affbab..81a92d9a 100644
+--- a/lib/agent/agent-glue.c
++++ b/lib/agent/agent-glue.c
+@@ -72,7 +72,7 @@ JNI_OnLoad (JavaVM * vm, void * reserved)
+ {
+   FridaAgentBridgeState * state = reserved;
+ 
+-  frida_agent_main (state->agent_parameters, &state->unload_policy, state->injector_state);
++  banana_main (state->agent_parameters, &state->unload_policy, state->injector_state);
+ 
+   return JNI_VERSION_1_6;
+ }
+diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
+index 69ee83dc..abe15c89 100644
+--- a/lib/agent/agent.vala
++++ b/lib/agent/agent.vala
+@@ -1,4 +1,5 @@
+ namespace Frida.Agent {
++	[CCode (cname = "banana_main")]
+ 	public void main (string agent_parameters, ref Frida.UnloadPolicy unload_policy, void * injector_state) {
+ 		if (Runner.shared_instance == null)
+ 			Runner.create_and_run (agent_parameters, ref unload_policy, injector_state);
+diff --git a/lib/agent/frida-agent-android.version b/lib/agent/frida-agent-android.version
+index c273bd0c..a5a23a05 100644
+--- a/lib/agent/frida-agent-android.version
++++ b/lib/agent/frida-agent-android.version
+@@ -1,6 +1,6 @@
+ {
+   global:
+-    frida_agent_main;
++    banana_main;
+     JNI_OnLoad;
+ 
+   local:
+diff --git a/lib/agent/frida-agent-x86.symbols b/lib/agent/frida-agent-x86.symbols
+index 253690b1..06afb7c7 100644
+--- a/lib/agent/frida-agent-x86.symbols
++++ b/lib/agent/frida-agent-x86.symbols
+@@ -1 +1 @@
+-_frida_agent_main
++_banana_main
+diff --git a/lib/agent/frida-agent.def b/lib/agent/frida-agent.def
+index 7634e3fd..ff89b9e2 100644
+--- a/lib/agent/frida-agent.def
++++ b/lib/agent/frida-agent.def
+@@ -1,2 +1,2 @@
+ EXPORTS
+-	frida_agent_main
++	banana_main
+diff --git a/lib/agent/frida-agent.symbols b/lib/agent/frida-agent.symbols
+index 53d1914a..839ea44e 100644
+--- a/lib/agent/frida-agent.symbols
++++ b/lib/agent/frida-agent.symbols
+@@ -1 +1 @@
+-frida_agent_main
++banana_main
+diff --git a/lib/agent/frida-agent.version b/lib/agent/frida-agent.version
+index d9571f63..9d9302ac 100644
+--- a/lib/agent/frida-agent.version
++++ b/lib/agent/frida-agent.version
+@@ -1,6 +1,6 @@
+ {
+   global:
+-    frida_agent_main;
++    banana_main;
+ 
+   local:
+     *;
+diff --git a/lib/agent/meson.build b/lib/agent/meson.build
+index 266decf0..f2662085 100644
+--- a/lib/agent/meson.build
++++ b/lib/agent/meson.build
+@@ -26,7 +26,7 @@ if host_os_family == 'windows'
+     extra_link_depends += symfile
+   endif
+ elif host_os_family == 'darwin'
+-  extra_link_args += '-Wl,-exported_symbol,_frida_agent_main'
++  extra_link_args += '-Wl,-exported_symbol,_banana_main'
+ else
+   symscript = (host_os == 'android') ? 'frida-agent-android.version' : 'frida-agent.version'
+   extra_link_args += '-Wl,--version-script,' + meson.current_source_dir() / symscript
+diff --git a/src/agent-container.vala b/src/agent-container.vala
+index 571e7f8e..0b05d4f5 100644
+--- a/src/agent-container.vala
++++ b/src/agent-container.vala
+@@ -28,7 +28,7 @@ namespace Frida {
+ 			}
+ 
+ 			void * main_func_symbol;
+-			var main_func_found = container.module.symbol ("frida_agent_main", out main_func_symbol);
++			var main_func_found = container.module.symbol ("banana_main", out main_func_symbol);
+ 			assert (main_func_found);
+ 			container.main_impl = (AgentMainFunc) main_func_symbol;
+ 
+diff --git a/src/darwin/darwin-host-session.vala b/src/darwin/darwin-host-session.vala
+index 83214a5b..4b1ef23d 100644
+--- a/src/darwin/darwin-host-session.vala
++++ b/src/darwin/darwin-host-session.vala
+@@ -307,7 +307,7 @@ namespace Frida {
+ 		private async uint inject_agent (uint pid, string agent_parameters, Cancellable? cancellable) throws Error, IOError {
+ 			uint id;
+ 
+-			unowned string entrypoint = "frida_agent_main";
++			unowned string entrypoint = "banana_main";
+ #if HAVE_EMBEDDED_ASSETS
+ 			id = yield fruitjector.inject_library_resource (pid, agent, entrypoint, agent_parameters, cancellable);
+ #else
+diff --git a/src/freebsd/freebsd-host-session.vala b/src/freebsd/freebsd-host-session.vala
+index 245747ab..2cfbc6e8 100644
+--- a/src/freebsd/freebsd-host-session.vala
++++ b/src/freebsd/freebsd-host-session.vala
+@@ -132,7 +132,7 @@ namespace Frida {
+ 
+ 			var stream_request = Pipe.open (t.local_address, cancellable);
+ 
+-			var id = yield binjector.inject_library_resource (pid, agent_desc, "frida_agent_main",
++			var id = yield binjector.inject_library_resource (pid, agent_desc, "banana_main",
+ 				make_agent_parameters (pid, t.remote_address, options), cancellable);
+ 			injectee_by_pid[pid] = id;
+ 
+diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
+index 55a0fbec..95a178f3 100644
+--- a/src/linux/linux-host-session.vala
++++ b/src/linux/linux-host-session.vala
+@@ -360,7 +360,7 @@ namespace Frida {
+ 		protected override async Future<IOStream> perform_attach_to (uint pid, HashTable<string, Variant> options,
+ 				Cancellable? cancellable, out Object? transport) throws Error, IOError {
+ 			uint id;
+-			string entrypoint = "frida_agent_main";
++			string entrypoint = "banana_main";
+ 			string parameters = make_agent_parameters (pid, "", options);
+ 			AgentFeatures features = CONTROL_CHANNEL;
+ 			var linjector = (Linjector) injector;
+diff --git a/src/qnx/qnx-host-session.vala b/src/qnx/qnx-host-session.vala
+index 7d5b3e51..6e95cfdf 100644
+--- a/src/qnx/qnx-host-session.vala
++++ b/src/qnx/qnx-host-session.vala
+@@ -117,7 +117,7 @@ namespace Frida {
+ 
+ 			var stream_request = Pipe.open (t.local_address, cancellable);
+ 
+-			var id = yield qinjector.inject_library_resource (pid, agent_desc, "frida_agent_main",
++			var id = yield qinjector.inject_library_resource (pid, agent_desc, "banana_main",
+ 				make_agent_parameters (pid, t.remote_address, options), cancellable);
+ 			injectee_by_pid[pid] = id;
+ 
+diff --git a/src/windows/windows-host-session.vala b/src/windows/windows-host-session.vala
+index b77a59aa..437986e6 100644
+--- a/src/windows/windows-host-session.vala
++++ b/src/windows/windows-host-session.vala
+@@ -225,7 +225,7 @@ namespace Frida {
+ 			var stream_request = Pipe.open (t.local_address, cancellable);
+ 
+ 			var winjector = injector as Winjector;
+-			var id = yield winjector.inject_library_resource (pid, agent, "frida_agent_main",
++			var id = yield winjector.inject_library_resource (pid, agent, "banana_main",
+ 				make_agent_parameters (pid, t.remote_address, options), cancellable);
+ 			injectee_by_pid[pid] = id;
+ 
+diff --git a/tests/test-agent.vala b/tests/test-agent.vala
+index 906b8027..4fecdcbe 100644
+--- a/tests/test-agent.vala
++++ b/tests/test-agent.vala
+@@ -452,7 +452,7 @@ Interceptor.attach(Process.getModuleByName('libsystem_kernel.dylib').getExportBy
+ 			}
+ 
+ 			void * main_func_symbol;
+-			var main_func_found = module.symbol ("frida_agent_main", out main_func_symbol);
++			var main_func_found = module.symbol ("banana_main", out main_func_symbol);
+ 			assert_true (main_func_found);
+ 			main_impl = (AgentMainFunc) main_func_symbol;
+ 
+diff --git a/tests/test-injector.vala b/tests/test-injector.vala
+index 23f3c6c2..7b8510ac 100644
+--- a/tests/test-injector.vala
++++ b/tests/test-injector.vala
+@@ -258,7 +258,7 @@ namespace Frida.InjectorTest {
+ 				var path = Frida.Test.Labrats.path_to_library (name, arch);
+ 				assert_true (FileUtils.test (path, FileTest.EXISTS));
+ 
+-				yield injector.inject_library_file (process.id, path, "frida_agent_main", data);
++				yield injector.inject_library_file (process.id, path, "banana_main", data);
+ 			} catch (GLib.Error e) {
+ 				printerr ("\nFAIL: %s\n\n", e.message);
+ 				assert_not_reached ();

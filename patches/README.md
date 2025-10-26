@@ -15,3 +15,4 @@ See the [main repository README](../../../README.md#option-2-manual-patching-for
 | [005-obfuscate-selinux.patch](./005-obfuscate-selinux.patch)                       | Obfuscate SELinux contexts from "frida_file"/"frida_memfd" to "banana_file"/"banana_memfd" |
 | [006-obfuscate-socket-paths.patch](./006-obfuscate-socket-paths.patch)             | Obfuscate socket/IPC paths from "frida:" to "banana:" and "/frida-" to "/banana-"          |
 | [007-obfuscate-server-identifiers.patch](./007-obfuscate-server-identifiers.patch) | Randomize server GUID and temporary directory name to prevent fingerprinting               |
+| [008-obfuscate-entrypoint.patch](./008-obfuscate-entrypoint.patch)                 | Obfuscate entry point symbol from "frida_agent_main" to "banana_main"                      |
