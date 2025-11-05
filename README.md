@@ -1,50 +1,17 @@
-# frida-core
+# Frida Core (Stealth Fork)
 
-Frida core library intended for static linking into bindings.
+A maintained 1:1 mirror of [Frida Core](https://github.com/frida/frida-core) with stealth patches applied to evade common detection methods. Patches also available separately.
 
-- Lets you inject your own JavaScript instrumentation code into other processes,
-  optionally with your own [C code][] for performance-sensitive bits.
-- Acts as a logistics layer that packages up [GumJS][] into a shared library.
-- Provides a two-way communication channel for talking to your scripts,
-  if needed, and later unload them.
-- Also lets you enumerate installed apps, running processes, and connected
-  devices.
-- Written in [Vala][], with OS-specific glue code in C/Objective-C/asm.
+## Usage
 
-## Binaries
+See the main [frida-stealth repository](https://github.com/rubenvereecken/frida-stealth) for:
 
-Typically used through one of the available language bindings:
+- How to use pre-patched versions
+- Build instructions
+- Available patches
 
-- [Python][]
-- [Node.js][]
-- [.NET][]
-- [Swift][]
-- [Qml][]
+**Patches:** See the [`patches/`](patches/) directory for all stealth modifications.
 
-E.g.:
+## About Frida Core
 
-```console
-$ pip install frida-tools # CLI tools
-$ pip install frida # Python bindings
-$ npm install frida # Node.js bindings
-```
-
-Or, for static linking into your own project written in a C-compatible language,
-download a devkit from the Frida [releases][] page.
-
-## Internals
-
-For a higher level view of the internals, check out the [architecture diagram][]
-and its links to the different parts of the codebase.
-
-
-[C code]: https://frida.re/docs/javascript-api/#cmodule
-[Vala]: https://wiki.gnome.org/Projects/Vala
-[GumJS]: https://github.com/frida/frida-gum
-[Python]: https://github.com/frida/frida-python
-[Node.js]: https://github.com/frida/frida-node
-[.NET]: https://github.com/frida/frida-clr
-[Swift]: https://github.com/frida/frida-swift
-[Qml]: https://github.com/frida/frida-qml
-[releases]: https://github.com/frida/frida/releases
-[architecture diagram]: https://frida.re/docs/hacking/
+Frida core library intended for static linking into bindings. For technical details about frida-core itself, see the [upstream README](https://github.com/frida/frida-core/blob/main/README.md).
